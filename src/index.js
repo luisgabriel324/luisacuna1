@@ -9,12 +9,13 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// 🌐 Ruta raíz (corregida)
+// 🏠 Ruta raíz
 app.get("/", (req, res) => {
-  res.send("✅ Servidor y base de datos conectados correctamente..");
+  res.send("✅ API de tareas funcionando correctamente.");
 });
 
-// ✅ Crear tarea
+
+// ✅ POST → Crear una tarea
 app.post("/tasks", async (req, res) => {
   try {
     const { title } = req.body;
@@ -27,6 +28,7 @@ app.post("/tasks", async (req, res) => {
       "INSERT INTO tasks (title, completed) VALUES ($1, false) RETURNING *",
       [title]
     );
+
     res.status(201).json(result.rows[0]);
   } catch (err) {
     console.error("Error al crear tarea:", err.message);
@@ -34,18 +36,20 @@ app.post("/tasks", async (req, res) => {
   }
 });
 
-// 📋 Listar tareas
+
+// 📋 GET → Listar todas las tareas
 app.get("/tasks", async (req, res) => {
   try {
     const result = await pool.query("SELECT * FROM tasks ORDER BY id ASC");
     res.json(result.rows);
   } catch (err) {
-    console.error("Error al listar tareas:", err.message);
+    console.error("Error al obtener tareas:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✏️ Actualizar tarea
+
+// ✏️ PUT → Actualizar una tarea por ID
 app.put("/tasks/:id", async (req, res) => {
   try {
     const { id } = req.params;
@@ -56,8 +60,9 @@ app.put("/tasks/:id", async (req, res) => {
       [title, completed, id]
     );
 
-    if (result.rows.length === 0)
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: "Tarea no encontrada" });
+    }
 
     res.json(result.rows[0]);
   } catch (err) {
@@ -66,15 +71,17 @@ app.put("/tasks/:id", async (req, res) => {
   }
 });
 
-// 🗑️ Borrar tarea
+
+// 🗑️ DELETE → Eliminar una tarea por ID
 app.delete("/tasks/:id", async (req, res) => {
   try {
     const { id } = req.params;
 
     const result = await pool.query("DELETE FROM tasks WHERE id = $1 RETURNING *", [id]);
 
-    if (result.rows.length === 0)
+    if (result.rows.length === 0) {
       return res.status(404).json({ error: "Tarea no encontrada" });
+    }
 
     res.json({ message: "✅ Tarea eliminada correctamente" });
   } catch (err) {
@@ -83,8 +90,10 @@ app.delete("/tasks/:id", async (req, res) => {
   }
 });
 
+
+// 🚀 Iniciar el servidor
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () =>
-  console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`)
-);
+app.listen(PORT, () => {
+  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+});
 
